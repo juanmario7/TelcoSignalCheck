@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reporte de señal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f6f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .logo { font-size: 13px; color: #888; margin-bottom: 8px; }
+    h1 { font-size: 20px; color: #1a1a2e; margin-bottom: 6px; }
+    p.sub { font-size: 14px; color: #555; margin-bottom: 24px; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab {
+      flex: 1; padding: 10px; border-radius: 10px; border: 2px solid #e0e0e0;
+      background: #fff; font-size: 14px; cursor: pointer; text-align: center;
+      transition: all .2s;
+    }
+    .tab.active { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; font-weight: 600; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    label { display: block; font-size: 13px; color: #444; margin-bottom: 6px; font-weight: 500; }
+    input[type="text"], textarea {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #ddd;
+      border-radius: 10px; font-size: 15px; outline: none;
+      transition: border-color .2s;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: #4f46e5; }
+    textarea { resize: vertical; min-height: 80px; margin-top: 16px; }
+
+    .gps-btn {
+      width: 100%; padding: 12px; border-radius: 10px;
+      border: 2px dashed #4f46e5; background: #f5f3ff;
+      color: #4f46e5; font-size: 15px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .gps-status { font-size: 13px; color: #555; margin-top: 8px; text-align: center; min-height: 20px; }
+
+    .submit-btn {
+      width: 100%; margin-top: 22px; padding: 14px;
+      background: #4f46e5; color: #fff; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 600; cursor: pointer;
+      transition: background .2s;
+    }
+    .submit-btn:hover { background: #4338ca; }
+    .submit-btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+    .success { display: none; text-align: center; padding: 20px 0; }
+    .success .icon { font-size: 48px; }
+    .success h2 { margin: 12px 0 6px; color: #1a1a2e; }
+    .success p { color: #555; font-size: 14px; }
+
+    .error-msg { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Reporte de cobertura</div>
+  <h1>¿Dónde tienes el problema?</h1>
+  <p class="sub">Indícanos tu ubicación para que podamos revisarla.</p>
+
+  <div id="form-content">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('address')">📍 Dirección</button>
+      <button class="tab" onclick="switchTab('gps')">📡 GPS</button>
+    </div>
+
+    <!-- Panel dirección -->
+    <div id="panel-address" class="panel active">
+      <label for="address-input">Dirección o barrio</label>
+      <input type="text" id="address-input"
+             placeholder="Ej: Calle 72 #10-34, Bogotá" />
+    </div>
+
+    <!-- Panel GPS -->
+    <div id="panel-gps" class="panel">
+      <button class="gps-btn" onclick="getGPS()">
+        <span>📡</span> Obtener mi ubicación
+      </button>
+      <div class="gps-status" id="gps-status">Toca el botón para compartir tu ubicación.</div>
+    </div>
+
+    <div>
+      <textarea id="description" placeholder="Describe el problema (opcional): sin señal, llamadas cortadas, internet lento..."></textarea>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitReport()">Enviar reporte</button>
+  </div>
+
+  <div class="success" id="success">
+    <div class="icon">✅</div>
+    <h2>¡Gracias por reportar!</h2>
+    <p>Recibimos tu reporte. Nuestro equipo técnico revisará la zona.</p>
+  </div>
+</div>
+
+<script>
+  const PHONE = "{{PHONE}}";
+  let currentTab = "address";
+  let gpsCoords = null;
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll(".tab").forEach((t, i) => {
+      t.classList.toggle("active", (i === 0 && tab === "address") || (i === 1 && tab === "gps"));
+    });
+    document.getElementById("panel-address").classList.toggle("active", tab === "address");
+    document.getElementById("panel-gps").classList.toggle("active", tab === "gps");
+  }
+
+  function getGPS() {
+    const status = document.getElementById("gps-status");
+    if (!navigator.geolocation) {
+      status.textContent = "Tu navegador no soporta GPS. Usa la opción de dirección.";
+      return;
+    }
+    status.textContent = "Obteniendo ubicación...";
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        status.textContent = `✅ Ubicación obtenida (${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)})`;
+      },
+      (err) => {
+        status.textContent = "No se pudo obtener la ubicación. Verifica los permisos del navegador.";
+      }
+    );
+  }
+
+  async function submitReport() {
+    const btn = document.getElementById("submit-btn");
+    const errorEl = document.getElementById("error-msg");
+    errorEl.style.display = "none";
+
+    let payload = {
+      phone: PHONE,
+      location_method: currentTab,
+      description: document.getElementById("description").value.trim() || null,
+    };
+
+    if (currentTab === "address") {
+      const addr = document.getElementById("address-input").value.trim();
+      if (!addr) { showError("Por favor ingresa una dirección."); return; }
+      payload.address = addr;
+    } else {
+      if (!gpsCoords) { showError("Primero obtén tu ubicación GPS."); return; }
+      payload.lat = gpsCoords.lat;
+      payload.lng = gpsCoords.lng;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+
+    try {
+      const resp = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json();
+      if (!resp.ok) { showError(data.detail || "Error al enviar."); btn.disabled = false; btn.textContent = "Enviar reporte"; return; }
+      document.getElementById("form-content").style.display = "none";
+      document.getElementById("success").style.display = "block";
+    } catch (e) {
+      showError("Error de conexión. Intenta de nuevo.");
+      btn.disabled = false;
+      btn.textContent = "Enviar reporte";
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("error-msg");
+    el.textContent = msg;
+    el.style.display = "block";
+  }
+</script>
+</body>
+</html>
