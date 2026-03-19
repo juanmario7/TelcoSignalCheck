@@ -8,7 +8,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f4f6f9;
+      background: #e4002b;
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -33,7 +33,7 @@
       background: #fff; font-size: 14px; cursor: pointer; text-align: center;
       transition: all .2s;
     }
-    .tab.active { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; font-weight: 600; }
+    .tab.active { border-color: #e4002b; background: #fde8ec; color: #e4002b; font-weight: 600; }
 
     .panel { display: none; }
     .panel.active { display: block; }
@@ -44,25 +44,31 @@
       border-radius: 10px; font-size: 15px; outline: none;
       transition: border-color .2s;
     }
-    input[type="text"]:focus, textarea:focus { border-color: #4f46e5; }
+    input[type="text"]:focus, textarea:focus { border-color: #e4002b; }
+
+    /* Estilos para el dropdown de autocomplete de Google */
+    .pac-container { border-radius: 10px; margin-top: 4px; font-family: inherit; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+    .pac-item { padding: 8px 14px; font-size: 14px; cursor: pointer; }
+    .pac-item:hover { background: #fde8ec; }
+    .pac-item-selected { background: #fde8ec; }
     textarea { resize: vertical; min-height: 80px; margin-top: 16px; }
 
     .gps-btn {
       width: 100%; padding: 12px; border-radius: 10px;
-      border: 2px dashed #4f46e5; background: #f5f3ff;
-      color: #4f46e5; font-size: 15px; cursor: pointer;
+      border: 2px dashed #e4002b; background: #fde8ec;
+      color: #e4002b; font-size: 15px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .gps-status { font-size: 13px; color: #555; margin-top: 8px; text-align: center; min-height: 20px; }
 
     .submit-btn {
       width: 100%; margin-top: 22px; padding: 14px;
-      background: #4f46e5; color: #fff; border: none; border-radius: 12px;
+      background: #e4002b; color: #fff; border: none; border-radius: 12px;
       font-size: 16px; font-weight: 600; cursor: pointer;
       transition: background .2s;
     }
-    .submit-btn:hover { background: #4338ca; }
-    .submit-btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .submit-btn:hover { background: #b8001f; }
+    .submit-btn:disabled { background: #f08090; cursor: not-allowed; }
 
     .success { display: none; text-align: center; padding: 20px 0; }
     .success .icon { font-size: 48px; }
@@ -115,10 +121,36 @@
   </div>
 </div>
 
+<script src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_MAPS_API_KEY}}&libraries=places&language=es&region=CO&callback=initAutocomplete" async defer></script>
 <script>
   const PHONE = "{{PHONE}}";
   let currentTab = "address";
   let gpsCoords = null;
+  let autocompleteCoords = null;
+
+  // Debe ser global para que Google Maps la llame como callback
+  window.initAutocomplete = function() {
+    const input = document.getElementById("address-input");
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: "co" },
+      fields: ["formatted_address", "geometry"],
+      types: ["geocode", "establishment"],
+    });
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (place.geometry && place.geometry.location) {
+        autocompleteCoords = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+        };
+        input.value = place.formatted_address;
+      } else {
+        autocompleteCoords = null;
+      }
+    });
+    // Limpiar coords si el usuario edita el campo manualmente
+    input.addEventListener("input", () => { autocompleteCoords = null; });
+  }
 
   function switchTab(tab) {
     currentTab = tab;
@@ -162,6 +194,10 @@
       const addr = document.getElementById("address-input").value.trim();
       if (!addr) { showError("Por favor ingresa una dirección."); return; }
       payload.address = addr;
+      if (autocompleteCoords) {
+        payload.lat = autocompleteCoords.lat;
+        payload.lng = autocompleteCoords.lng;
+      }
     } else {
       if (!gpsCoords) { showError("Primero obtén tu ubicación GPS."); return; }
       payload.lat = gpsCoords.lat;

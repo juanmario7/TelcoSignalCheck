@@ -10,11 +10,32 @@
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1a1a2e; }
 
     header {
-      background: #4f46e5; color: #fff;
-      padding: 16px 24px; display: flex; align-items: center; gap: 12px;
+      background: #e4002b; color: #fff;
+      padding: 16px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
     header h1 { font-size: 18px; font-weight: 700; }
     header span { font-size: 13px; opacity: .8; margin-left: auto; }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 12px; padding: 14px 24px;
+      background: #fff; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap;
+    }
+    .toolbar label { font-size: 13px; color: #444; font-weight: 500; }
+    .toolbar input[type="date"] {
+      padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 8px;
+      font-size: 14px; outline: none; cursor: pointer;
+    }
+    .toolbar input[type="date"]:focus { border-color: #e4002b; }
+    .btn {
+      padding: 8px 16px; border-radius: 8px; border: none; font-size: 14px;
+      font-weight: 600; cursor: pointer; transition: background .2s;
+    }
+    .btn-primary { background: #e4002b; color: #fff; }
+    .btn-primary:hover { background: #b8001f; }
+    .btn-outline { background: #fff; color: #e4002b; border: 1.5px solid #e4002b; }
+    .btn-outline:hover { background: #fde8ec; }
+    .btn-clear { background: none; color: #888; border: 1.5px solid #ddd; }
+    .btn-clear:hover { background: #f5f5f5; }
 
     .stats {
       display: flex; gap: 16px; padding: 20px 24px; flex-wrap: wrap;
@@ -23,10 +44,10 @@
       background: #fff; border-radius: 12px; padding: 16px 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,.06); min-width: 140px;
     }
-    .stat-card .value { font-size: 32px; font-weight: 700; color: #4f46e5; }
+    .stat-card .value { font-size: 32px; font-weight: 700; color: #e4002b; }
     .stat-card .label { font-size: 13px; color: #666; margin-top: 2px; }
 
-    .main { display: flex; gap: 0; height: calc(100vh - 160px); }
+    .main { display: flex; gap: 0; height: calc(100vh - 220px); }
 
     #map { flex: 1; min-height: 400px; }
 
@@ -40,7 +61,7 @@
       padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer;
       transition: background .15s;
     }
-    .report-item:hover { background: #f9f9ff; }
+    .report-item:hover { background: #fff5f6; }
     .report-item .phone { font-weight: 600; font-size: 14px; }
     .report-item .addr { font-size: 12px; color: #666; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .report-item .meta { display: flex; gap: 8px; margin-top: 4px; font-size: 11px; color: #999; }
@@ -48,7 +69,7 @@
       padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 600;
     }
     .badge-gps { background: #d1fae5; color: #065f46; }
-    .badge-address { background: #e0e7ff; color: #3730a3; }
+    .badge-address { background: #fde8ec; color: #e4002b; }
 
     @media (max-width: 640px) {
       .main { flex-direction: column; height: auto; }
@@ -62,6 +83,16 @@
   <h1>📶 TelcoSignalCheck — Dashboard</h1>
   <span id="last-update"></span>
 </header>
+
+<div class="toolbar">
+  <label>Desde</label>
+  <input type="date" id="filter-from" />
+  <label>Hasta</label>
+  <input type="date" id="filter-to" />
+  <button class="btn btn-primary" onclick="applyFilter()">Filtrar</button>
+  <button class="btn btn-clear" onclick="clearFilter()">Limpiar</button>
+  <button class="btn btn-outline" onclick="downloadCSV()">⬇ Descargar CSV</button>
+</div>
 
 <div class="stats">
   <div class="stat-card">
@@ -106,10 +137,33 @@
     map.flyTo([lat, lng], 15, { duration: 1 });
   }
 
+  function getFilterParams() {
+    const from = document.getElementById("filter-from").value;
+    const to = document.getElementById("filter-to").value;
+    const params = new URLSearchParams();
+    if (from) params.set("date_from", from);
+    if (to) params.set("date_to", to);
+    return params.toString() ? "?" + params.toString() : "";
+  }
+
+  function applyFilter() { loadData(); }
+
+  function clearFilter() {
+    document.getElementById("filter-from").value = "";
+    document.getElementById("filter-to").value = "";
+    loadData();
+  }
+
+  function downloadCSV() {
+    const qs = getFilterParams();
+    window.location.href = "/api/reports/export" + qs;
+  }
+
   async function loadData() {
+    const qs = getFilterParams();
     const [reportsRes, statsRes] = await Promise.all([
-      fetch("/api/reports"),
-      fetch("/api/stats"),
+      fetch("/api/reports" + qs),
+      fetch("/api/stats" + qs),
     ]);
     const reports = await reportsRes.json();
     const stats = await statsRes.json();
@@ -129,7 +183,7 @@
     // Pins en mapa
     reports.forEach(r => {
       if (r.lat && r.lng) {
-        const color = r.location_method === "gps" ? "#065f46" : "#3730a3";
+        const color = r.location_method === "gps" ? "#065f46" : "#e4002b";
         const icon = L.divIcon({
           html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
           className: "",

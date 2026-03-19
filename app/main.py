@@ -1,11 +1,16 @@
 from fastapi import FastAPI, Request, Query, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import os
+import os, csv, io
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from .database import init_db, save_report, get_all_reports, get_stats
 from .geocoding import geocode
+
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
 
 app = FastAPI(title="TelcoSignalCheck")
 
@@ -23,7 +28,7 @@ def startup():
 @app.get("/form", response_class=HTMLResponse)
 def form(phone: str = Query(..., description="Número del usuario")):
     with open(os.path.join(FRONTEND_DIR, "form.html"), encoding="utf-8") as f:
-        html = f.read().replace("{{PHONE}}", phone)
+        html = f.read().replace("{{PHONE}}", phone).replace("{{GOOGLE_MAPS_API_KEY}}", GOOGLE_MAPS_API_KEY)
     return HTMLResponse(html)
 
 
@@ -43,10 +48,12 @@ def submit_report(payload: ReportPayload):
     if payload.location_method == "address":
         if not payload.address:
             raise HTTPException(400, "Se requiere dirección")
-        result = geocode(payload.address)
-        if not result:
-            raise HTTPException(422, "No se pudo geocodificar la dirección. Intenta ser más específico.")
-        lat, lng, address = result["lat"], result["lng"], result["display_name"]
+        # Si el autocomplete ya envió coordenadas, las usamos directamente
+        if lat is None or lng is None:
+            result = geocode(payload.address)
+            if not result:
+                raise HTTPException(422, "No se pudo geocodificar la dirección. Intenta ser más específico.")
+            lat, lng, address = result["lat"], result["lng"], result["display_name"]
 
     elif payload.location_method == "gps":
         if lat is None or lng is None:
@@ -75,10 +82,31 @@ def dashboard():
 
 
 @app.get("/api/reports")
-def reports():
-    return JSONResponse(get_all_reports())
+def reports(date_from: str = Query(None), date_to: str = Query(None)):
+    return JSONResponse(get_all_reports(date_from, date_to))
 
 
 @app.get("/api/stats")
-def stats():
-    return JSONResponse(get_stats())
+def stats(date_from: str = Query(None), date_to: str = Query(None)):
+    return JSONResponse(get_stats(date_from, date_to))
+
+
+@app.get("/api/reports/export")
+def export_reports(date_from: str = Query(None), date_to: str = Query(None)):
+    rows = get_all_reports(date_from, date_to)
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=["id", "phone", "address", "lat", "lng", "location_method", "description", "created_at"])
+    writer.writeheader()
+    writer.writerows(rows)
+    output.seek(0)
+    filename = "reportes_senal"
+    if date_from:
+        filename += f"_{date_from}"
+    if date_to:
+        filename += f"_a_{date_to}"
+    filename += ".csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )

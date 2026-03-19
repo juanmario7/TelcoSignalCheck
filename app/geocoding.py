@@ -1,31 +1,35 @@
+import os
 import requests
+from dotenv import load_dotenv
 
-NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
-HEADERS = {"User-Agent": "TelcoSignalCheck/1.0"}
+load_dotenv()
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+GOOGLE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 
 
 def geocode(address: str) -> dict | None:
     """
-    Convierte una dirección a coordenadas.
-    Prioriza Colombia. Retorna {"lat": float, "lng": float, "display_name": str} o None.
+    Convierte una dirección a coordenadas usando Google Maps Geocoding API.
+    Retorna {"lat": float, "lng": float, "display_name": str} o None.
     """
     params = {
-        "q": f"{address}, Colombia",
-        "format": "json",
-        "limit": 1,
-        "countrycodes": "co",
-        "addressdetails": 1,
+        "address": f"{address}, Colombia",
+        "key": GOOGLE_API_KEY,
+        "language": "es",
+        "region": "co",
     }
     try:
-        resp = requests.get(NOMINATIM_URL, params=params, headers=HEADERS, timeout=5)
+        resp = requests.get(GOOGLE_URL, params=params, timeout=5)
         resp.raise_for_status()
-        results = resp.json()
-        if results:
-            r = results[0]
+        data = resp.json()
+        if data["status"] == "OK" and data["results"]:
+            r = data["results"][0]
+            location = r["geometry"]["location"]
             return {
-                "lat": float(r["lat"]),
-                "lng": float(r["lon"]),
-                "display_name": r["display_name"],
+                "lat": location["lat"],
+                "lng": location["lng"],
+                "display_name": r["formatted_address"],
             }
     except Exception:
         pass
