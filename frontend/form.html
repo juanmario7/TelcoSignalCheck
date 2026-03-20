@@ -150,6 +150,14 @@
       <button class="option-btn" onclick="selectOption('problem', 'Llamadas se caen', this)">📞 Llamadas se caen</button>
       <button class="option-btn" onclick="selectOption('problem', 'Otro', this)">💬 Otro</button>
     </div>
+    <div id="otro-container" style="display:none; margin-top:12px;">
+      <input type="text" id="otro-input" maxlength="80"
+             placeholder="Describe brevemente el problema (máx. 80 caracteres)"
+             oninput="updateOtroCounter()" />
+      <div style="text-align:right; font-size:12px; color:#999; margin-top:4px;">
+        <span id="otro-counter">0</span>/80
+      </div>
+    </div>
     <div class="btn-row">
       <button class="back-btn" onclick="goTo(1)">← Atrás</button>
       <button class="submit-btn" onclick="goTo(3)" id="btn-step2">Siguiente</button>
@@ -240,8 +248,18 @@
 
   function goTo(step) {
     // Validar antes de avanzar
-    if (step === 3 && currentStep === 2 && !answers.problem) {
-      document.getElementById("error-step2").style.display = "block"; return;
+    if (step === 3 && currentStep === 2) {
+      if (!answers.problem) {
+        document.getElementById("error-step2").style.display = "block"; return;
+      }
+      if (answers.problem === "Otro") {
+        const otroText = document.getElementById("otro-input").value.trim();
+        if (!otroText) {
+          document.getElementById("error-step2").textContent = "Por favor describe el problema.";
+          document.getElementById("error-step2").style.display = "block"; return;
+        }
+        answers.problem = "Otro: " + otroText;
+      }
     }
     if (step === 4 && currentStep === 3 && !answers.frequency) {
       document.getElementById("error-step3").style.display = "block"; return;
@@ -274,6 +292,15 @@
     el.classList.add("selected");
     answers[type] = value;
     document.getElementById("error-step" + (type === "problem" ? 2 : 3)).style.display = "none";
+    if (type === "problem") {
+      document.getElementById("otro-container").style.display = value === "Otro" ? "block" : "none";
+      if (value !== "Otro") document.getElementById("otro-input").value = "";
+    }
+  }
+
+  function updateOtroCounter() {
+    const val = document.getElementById("otro-input").value;
+    document.getElementById("otro-counter").textContent = val.length;
   }
 
   // ── Paso 4: Ubicación ─────────────────────────────────────────────────────
