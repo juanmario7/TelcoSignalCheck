@@ -38,15 +38,15 @@
 
     /* Charts */
     .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-    .chart-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-    .chart-card h3 { font-size: 14px; color: #333; margin-bottom: 16px; font-weight: 600; }
-    .chart-card canvas { max-height: 220px; }
+    .chart-card { background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .chart-card h3 { font-size: 12px; color: #555; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+    .chart-card canvas { max-height: 140px; }
     @media (max-width: 640px) { .charts-row { grid-template-columns: 1fr; } }
 
     /* Mapa */
     .map-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px; }
-    .map-card h3 { font-size: 14px; color: #333; font-weight: 600; padding: 16px 20px 0; }
-    #map { height: 320px; }
+    .map-card h3 { font-size: 14px; color: #333; font-weight: 600; padding: 14px 20px 8px; }
+    #map { height: 500px; }
 
     /* Tabla */
     .table-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: hidden; }
@@ -58,6 +58,13 @@
     tr:hover td { background: #fff5f6; }
     tr:last-child td { border-bottom: none; }
     .badge { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .fly-btn {
+      padding: 4px 10px; border-radius: 6px; border: 1.5px solid #e4002b;
+      background: #fff; color: #e4002b; font-size: 11px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; transition: all .15s;
+    }
+    .fly-btn:hover { background: #e4002b; color: #fff; }
+    .fly-btn:disabled { border-color: #ddd; color: #bbb; cursor: default; }
     .badge-yes { background: #fee2e2; color: #b91c1c; }
     .badge-no  { background: #d1fae5; color: #065f46; }
     .rating-pill {
@@ -139,6 +146,7 @@
             <th>Frecuencia</th>
             <th>Ubicación</th>
             <th>Comentario</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="reports-body"></tbody>
@@ -153,6 +161,13 @@
 <script>
   // ── Mapa ──────────────────────────────────────────────────────────────────
   const map = L.map("map").setView([4.5709, -74.2973], 6);
+  const markerMap = {};  // phone+created_at → marker
+
+  function flyTo(lat, lng, key) {
+    map.flyTo([lat, lng], 15, { duration: 1 });
+    if (markerMap[key]) markerMap[key].openPopup();
+    document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors", maxZoom: 18,
   }).addTo(map);
@@ -291,6 +306,7 @@
     // ── Mapa ──
     markers.forEach(m => map.removeLayer(m));
     markers.length = 0;
+    Object.keys(markerMap).forEach(k => delete markerMap[k]);
     reports.forEach(r => {
       if (r.lat && r.lng) {
         const color = r.has_problem ? "#e4002b" : "#16a34a";
@@ -307,6 +323,7 @@
         `);
         marker.addTo(map);
         markers.push(marker);
+        markerMap[r.phone + r.created_at] = marker;
       }
     });
 
@@ -327,6 +344,10 @@
         <td>${r.frequency || "—"}</td>
         <td style="max-width:180px;font-size:12px">${r.address || "GPS"}</td>
         <td style="max-width:160px;font-size:12px;color:#555">${r.description || "—"}</td>
+        <td>${r.lat && r.lng
+          ? `<button class="fly-btn" onclick="flyTo(${r.lat}, ${r.lng}, '${r.phone + r.created_at}')">📍 Ir a ubicación</button>`
+          : `<button class="fly-btn" disabled>Sin ubicación</button>`
+        }</td>
       </tr>
     `).join("");
   }
