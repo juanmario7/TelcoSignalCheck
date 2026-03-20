@@ -9,10 +9,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1a1a2e; }
 
-    header {
-      background: #e4002b; color: #fff;
-      padding: 16px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    }
+    header { background: #e4002b; color: #fff; padding: 16px 24px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
     header h1 { font-size: 18px; font-weight: 700; }
     header span { font-size: 13px; opacity: .8; margin-left: auto; }
 
@@ -21,15 +18,9 @@
       background: #fff; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap;
     }
     .toolbar label { font-size: 13px; color: #444; font-weight: 500; }
-    .toolbar input[type="date"] {
-      padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 8px;
-      font-size: 14px; outline: none; cursor: pointer;
-    }
+    .toolbar input[type="date"] { padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
     .toolbar input[type="date"]:focus { border-color: #e4002b; }
-    .btn {
-      padding: 8px 16px; border-radius: 8px; border: none; font-size: 14px;
-      font-weight: 600; cursor: pointer; transition: background .2s;
-    }
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
     .btn-primary { background: #e4002b; color: #fff; }
     .btn-primary:hover { background: #b8001f; }
     .btn-outline { background: #fff; color: #e4002b; border: 1.5px solid #e4002b; }
@@ -37,45 +28,43 @@
     .btn-clear { background: none; color: #888; border: 1.5px solid #ddd; }
     .btn-clear:hover { background: #f5f5f5; }
 
-    .stats {
-      display: flex; gap: 16px; padding: 20px 24px; flex-wrap: wrap;
-    }
-    .stat-card {
-      background: #fff; border-radius: 12px; padding: 16px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.06); min-width: 140px;
-    }
-    .stat-card .value { font-size: 32px; font-weight: 700; color: #e4002b; }
-    .stat-card .label { font-size: 13px; color: #666; margin-top: 2px; }
+    .content { padding: 20px 24px; }
 
-    .main { display: flex; gap: 0; height: calc(100vh - 220px); }
+    /* Stats */
+    .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 16px 20px; min-width: 130px; box-shadow: 0 2px 8px rgba(0,0,0,.06); flex: 1; }
+    .stat-card .value { font-size: 30px; font-weight: 700; color: #e4002b; }
+    .stat-card .label { font-size: 12px; color: #666; margin-top: 2px; }
 
-    #map { flex: 1; min-height: 400px; }
+    /* Charts */
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .chart-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .chart-card h3 { font-size: 14px; color: #333; margin-bottom: 16px; font-weight: 600; }
+    .chart-card canvas { max-height: 220px; }
+    @media (max-width: 640px) { .charts-row { grid-template-columns: 1fr; } }
 
-    .sidebar {
-      width: 340px; background: #fff; overflow-y: auto;
-      border-left: 1px solid #e5e7eb;
-    }
-    .sidebar h2 { padding: 16px; font-size: 15px; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; background: #fff; z-index: 10; }
+    /* Mapa */
+    .map-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px; }
+    .map-card h3 { font-size: 14px; color: #333; font-weight: 600; padding: 16px 20px 0; }
+    #map { height: 320px; }
 
-    .report-item {
-      padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer;
-      transition: background .15s;
+    /* Tabla */
+    .table-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: hidden; }
+    .table-card h3 { font-size: 14px; color: #333; font-weight: 600; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f9f9f9; padding: 10px 14px; text-align: left; font-weight: 600; color: #555; border-bottom: 1px solid #eee; white-space: nowrap; }
+    td { padding: 10px 14px; border-bottom: 1px solid #f5f5f5; vertical-align: top; }
+    tr:hover td { background: #fff5f6; }
+    tr:last-child td { border-bottom: none; }
+    .badge { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .badge-yes { background: #fee2e2; color: #b91c1c; }
+    .badge-no  { background: #d1fae5; color: #065f46; }
+    .rating-pill {
+      display: inline-block; width: 28px; height: 28px; border-radius: 50%;
+      line-height: 28px; text-align: center; font-weight: 700; font-size: 13px; color: #fff;
     }
-    .report-item:hover { background: #fff5f6; }
-    .report-item .phone { font-weight: 600; font-size: 14px; }
-    .report-item .addr { font-size: 12px; color: #666; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .report-item .meta { display: flex; gap: 8px; margin-top: 4px; font-size: 11px; color: #999; }
-    .badge {
-      padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    }
-    .badge-gps { background: #d1fae5; color: #065f46; }
-    .badge-address { background: #fde8ec; color: #e4002b; }
-
-    @media (max-width: 640px) {
-      .main { flex-direction: column; height: auto; }
-      .sidebar { width: 100%; height: 300px; }
-      #map { height: 350px; }
-    }
+    .empty { text-align: center; padding: 40px; color: #999; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -94,71 +83,166 @@
   <button class="btn btn-outline" onclick="downloadCSV()">⬇ Descargar CSV</button>
 </div>
 
-<div class="stats">
-  <div class="stat-card">
-    <div class="value" id="stat-total">—</div>
-    <div class="label">Reportes totales</div>
-  </div>
-  <div class="stat-card">
-    <div class="value" id="stat-gps">—</div>
-    <div class="label">Por GPS</div>
-  </div>
-  <div class="stat-card">
-    <div class="value" id="stat-addr">—</div>
-    <div class="label">Por dirección</div>
-  </div>
-</div>
+<div class="content">
 
-<div class="main">
-  <div id="map"></div>
-  <div class="sidebar">
-    <h2>Reportes recientes</h2>
-    <div id="report-list"></div>
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card"><div class="value" id="stat-total">—</div><div class="label">Respuestas totales</div></div>
+    <div class="stat-card"><div class="value" id="stat-problems">—</div><div class="label">Con problemas de señal</div></div>
+    <div class="stat-card"><div class="value" id="stat-voice">—</div><div class="label">Promedio calificación voz</div></div>
+    <div class="stat-card"><div class="value" id="stat-data">—</div><div class="label">Promedio calificación datos</div></div>
   </div>
+
+  <!-- Gráficas calificaciones -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>📞 Distribución calificación de voz</h3>
+      <canvas id="chart-voice"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>📶 Distribución calificación de datos</h3>
+      <canvas id="chart-data"></canvas>
+    </div>
+  </div>
+
+  <!-- Gráficas problemas -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>🔴 Tipo de problema (usuarios con fallas)</h3>
+      <canvas id="chart-problem"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>🕐 Frecuencia del problema (usuarios con fallas)</h3>
+      <canvas id="chart-frequency"></canvas>
+    </div>
+  </div>
+
+  <!-- Mapa -->
+  <div class="map-card">
+    <h3 style="padding:16px 20px 8px">📍 Mapa de reportes</h3>
+    <div id="map"></div>
+  </div>
+
+  <!-- Tabla de reportes -->
+  <div class="table-card" style="margin-top:24px">
+    <h3>Respuestas del formulario</h3>
+    <div class="table-wrap">
+      <table id="reports-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Teléfono</th>
+            <th>Voz</th>
+            <th>Datos</th>
+            <th>¿Problemas?</th>
+            <th>Tipo</th>
+            <th>Frecuencia</th>
+            <th>Ubicación</th>
+            <th>Comentario</th>
+          </tr>
+        </thead>
+        <tbody id="reports-body"></tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-  // Mapa centrado en Colombia
+  // ── Mapa ──────────────────────────────────────────────────────────────────
   const map = L.map("map").setView([4.5709, -74.2973], 6);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-    maxZoom: 18,
+    attribution: "© OpenStreetMap contributors", maxZoom: 18,
   }).addTo(map);
-
   const markers = [];
 
+  // ── Gráficas ──────────────────────────────────────────────────────────────
+  const RATING_COLORS = [
+    "#e4002b","#e4002b","#e4002b","#e4002b",
+    "#f97316","#f97316",
+    "#facc15","#facc15",
+    "#4ade80","#16a34a"
+  ];
+  const PROBLEM_COLORS = ["#e4002b","#f97316","#facc15","#60a5fa","#a78bfa","#34d399"];
+
+  let chartVoice, chartData, chartProblem, chartFrequency;
+
+  function buildBarChart(id, labels, data, colors) {
+    const ctx = document.getElementById(id).getContext("2d");
+    const existing = id === "chart-voice" ? chartVoice : id === "chart-data" ? chartData : null;
+    if (existing) existing.destroy();
+    const chart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+      }
+    });
+    if (id === "chart-voice") chartVoice = chart;
+    if (id === "chart-data") chartData = chart;
+    return chart;
+  }
+
+  function buildDoughnutChart(id, labels, data) {
+    const ctx = document.getElementById(id).getContext("2d");
+    const existing = id === "chart-problem" ? chartProblem : chartFrequency;
+    if (existing) existing.destroy();
+    const chart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: PROBLEM_COLORS, borderWidth: 2, borderColor: "#fff" }]
+      },
+      options: {
+        plugins: {
+          legend: { position: "bottom", labels: { font: { size: 12 }, padding: 12 } }
+        },
+        cutout: "55%",
+      }
+    });
+    if (id === "chart-problem") chartProblem = chart;
+    else chartFrequency = chart;
+    return chart;
+  }
+
+  // ── Utilidades ────────────────────────────────────────────────────────────
   function formatDate(iso) {
-    const d = new Date(iso + "Z");
+    const d = new Date(iso + (iso.includes("Z") ? "" : "-05:00"));
     return d.toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" });
   }
 
-  function flyTo(lat, lng) {
-    map.flyTo([lat, lng], 15, { duration: 1 });
+  function ratingColor(n) {
+    if (!n) return "#ccc";
+    if (n <= 4) return "#e4002b";
+    if (n <= 6) return "#f97316";
+    if (n <= 8) return "#facc15";
+    return "#16a34a";
   }
 
   function getFilterParams() {
     const from = document.getElementById("filter-from").value;
-    const to = document.getElementById("filter-to").value;
-    const params = new URLSearchParams();
-    if (from) params.set("date_from", from);
-    if (to) params.set("date_to", to);
-    return params.toString() ? "?" + params.toString() : "";
+    const to   = document.getElementById("filter-to").value;
+    const p = new URLSearchParams();
+    if (from) p.set("date_from", from);
+    if (to)   p.set("date_to", to);
+    return p.toString() ? "?" + p.toString() : "";
   }
 
   function applyFilter() { loadData(); }
-
   function clearFilter() {
     document.getElementById("filter-from").value = "";
     document.getElementById("filter-to").value = "";
     loadData();
   }
+  function downloadCSV() { window.location.href = "/api/reports/export" + getFilterParams(); }
 
-  function downloadCSV() {
-    const qs = getFilterParams();
-    window.location.href = "/api/reports/export" + qs;
-  }
-
+  // ── Carga de datos ────────────────────────────────────────────────────────
   async function loadData() {
     const qs = getFilterParams();
     const [reportsRes, statsRes] = await Promise.all([
@@ -166,59 +250,89 @@
       fetch("/api/stats" + qs),
     ]);
     const reports = await reportsRes.json();
-    const stats = await statsRes.json();
+    const stats   = await statsRes.json();
 
-    // Stats
-    document.getElementById("stat-total").textContent = stats.total;
-    const gpsCount = stats.by_method.find(m => m.location_method === "gps")?.count ?? 0;
-    const addrCount = stats.by_method.find(m => m.location_method === "address")?.count ?? 0;
-    document.getElementById("stat-gps").textContent = gpsCount;
-    document.getElementById("stat-addr").textContent = addrCount;
     document.getElementById("last-update").textContent = "Actualizado: " + new Date().toLocaleTimeString("es-CO");
 
-    // Limpiar markers viejos
+    // ── Stats ──
+    document.getElementById("stat-total").textContent    = stats.total;
+    document.getElementById("stat-problems").textContent = stats.with_problems;
+    document.getElementById("stat-voice").textContent    = stats.avg_voice || "—";
+    document.getElementById("stat-data").textContent     = stats.avg_data  || "—";
+
+    // ── Gráfica voz ──
+    const voiceLabels = [], voiceData = [], voiceColors = [];
+    for (let i = 1; i <= 10; i++) {
+      voiceLabels.push(String(i));
+      voiceData.push(stats.voice_dist[String(i)] || 0);
+      voiceColors.push(ratingColor(i));
+    }
+    buildBarChart("chart-voice", voiceLabels, voiceData, voiceColors);
+
+    // ── Gráfica datos ──
+    const dataLabels = [], dataData = [], dataColors = [];
+    for (let i = 1; i <= 10; i++) {
+      dataLabels.push(String(i));
+      dataData.push(stats.data_dist[String(i)] || 0);
+      dataColors.push(ratingColor(i));
+    }
+    buildBarChart("chart-data", dataLabels, dataData, dataColors);
+
+    // ── Gráfica tipo de problema ──
+    if (stats.by_problem.length) {
+      buildDoughnutChart("chart-problem", stats.by_problem.map(r => r.label), stats.by_problem.map(r => r.count));
+    }
+
+    // ── Gráfica frecuencia ──
+    if (stats.by_frequency.length) {
+      buildDoughnutChart("chart-frequency", stats.by_frequency.map(r => r.label), stats.by_frequency.map(r => r.count));
+    }
+
+    // ── Mapa ──
     markers.forEach(m => map.removeLayer(m));
     markers.length = 0;
-
-    // Pins en mapa
     reports.forEach(r => {
       if (r.lat && r.lng) {
-        const color = r.location_method === "gps" ? "#065f46" : "#e4002b";
+        const color = r.has_problem ? "#e4002b" : "#16a34a";
         const icon = L.divIcon({
           html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
-          className: "",
-          iconSize: [12, 12],
-          iconAnchor: [6, 6],
+          className: "", iconSize: [12,12], iconAnchor: [6,6],
         });
-        const marker = L.marker([r.lat, r.lng], { icon })
-          .bindPopup(`
-            <b>${r.phone}</b><br/>
-            <small>${r.address || "Sin dirección"}</small><br/>
-            ${r.description ? `<i>${r.description}</i><br/>` : ""}
-            <small style="color:#999">${formatDate(r.created_at)}</small>
-          `);
+        const marker = L.marker([r.lat, r.lng], { icon }).bindPopup(`
+          <b>${r.phone}</b><br/>
+          🗣 Voz: ${r.voice_rating ?? "—"} | 📶 Datos: ${r.data_rating ?? "—"}<br/>
+          ${r.has_problem ? `⚠️ ${r.problem_type || "Problema"} — ${r.frequency || ""}` : "✅ Sin problemas"}<br/>
+          <small>${r.address || "GPS"}</small><br/>
+          <small style="color:#999">${formatDate(r.created_at)}</small>
+        `);
         marker.addTo(map);
         markers.push(marker);
       }
     });
 
-    // Lista lateral
-    const list = document.getElementById("report-list");
-    list.innerHTML = reports.map(r => `
-      <div class="report-item" onclick="flyTo(${r.lat}, ${r.lng})">
-        <div class="phone">${r.phone}</div>
-        <div class="addr">${r.address || "Ubicación GPS"}</div>
-        <div class="meta">
-          <span class="badge badge-${r.location_method}">${r.location_method === "gps" ? "GPS" : "Dirección"}</span>
-          <span>${formatDate(r.created_at)}</span>
-        </div>
-        ${r.description ? `<div style="font-size:12px;color:#555;margin-top:4px">${r.description}</div>` : ""}
-      </div>
+    // ── Tabla ──
+    const tbody = document.getElementById("reports-body");
+    if (!reports.length) {
+      tbody.innerHTML = `<tr><td colspan="9" class="empty">Sin reportes para el período seleccionado.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = [...reports].reverse().map(r => `
+      <tr>
+        <td style="white-space:nowrap">${formatDate(r.created_at)}</td>
+        <td>${r.phone}</td>
+        <td><span class="rating-pill" style="background:${ratingColor(r.voice_rating)}">${r.voice_rating ?? "—"}</span></td>
+        <td><span class="rating-pill" style="background:${ratingColor(r.data_rating)}">${r.data_rating ?? "—"}</span></td>
+        <td><span class="badge ${r.has_problem ? 'badge-yes' : 'badge-no'}">${r.has_problem ? "Sí" : "No"}</span></td>
+        <td>${r.problem_type || "—"}</td>
+        <td>${r.frequency || "—"}</td>
+        <td style="max-width:180px;font-size:12px">${r.address || "GPS"}</td>
+        <td style="max-width:160px;font-size:12px;color:#555">${r.description || "—"}</td>
+      </tr>
     `).join("");
   }
 
   loadData();
-  setInterval(loadData, 30000); // refresca cada 30s
+  setInterval(loadData, 30000);
 </script>
 </body>
 </html>

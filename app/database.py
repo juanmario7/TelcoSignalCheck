@@ -94,22 +94,68 @@ def get_all_reports(date_from: str = None, date_to: str = None):
 
 def get_stats(date_from: str = None, date_to: str = None):
     where, params = _build_where(date_from, date_to)
+    # where_problem filtra solo los que tienen problemas
+    problem_cond = "has_problem = TRUE"
+    where_problem = ("WHERE " + problem_cond) if not where else (where + " AND " + problem_cond)
+
     conn = get_connection()
     cur = conn.cursor()
+
     cur.execute(f"SELECT COUNT(*) FROM reports {where}", params)
     total = cur.fetchone()[0]
+
+    cur.execute(f"SELECT COUNT(*) FROM reports {where_problem}", params)
+    with_problems = cur.fetchone()[0]
+
+    cur.execute(f"SELECT ROUND(AVG(voice_rating), 1) FROM reports {where}", params)
+    avg_voice = float(cur.fetchone()[0] or 0)
+
+    cur.execute(f"SELECT ROUND(AVG(data_rating), 1) FROM reports {where}", params)
+    avg_data = float(cur.fetchone()[0] or 0)
+
+    # Distribución calificaciones voz (1-10)
+    voice_cond = "voice_rating IS NOT NULL"
+    where_voice = ("WHERE " + voice_cond) if not where else (where + " AND " + voice_cond)
     cur.execute(f"""
-        SELECT location_method, COUNT(*) as count
-        FROM reports {where}
-        GROUP BY location_method
+        SELECT voice_rating, COUNT(*) as count FROM reports {where_voice}
+        GROUP BY voice_rating ORDER BY voice_rating
     """, params)
-    by_method = [{"location_method": r[0], "count": r[1]} for r in cur.fetchall()]
+    voice_dist = {str(r[0]): r[1] for r in cur.fetchall()}
+
+    # Distribución calificaciones datos (1-10)
+    data_cond = "data_rating IS NOT NULL"
+    where_data = ("WHERE " + data_cond) if not where else (where + " AND " + data_cond)
     cur.execute(f"""
-        SELECT problem_type, COUNT(*) as count
-        FROM reports {where}
+        SELECT data_rating, COUNT(*) as count FROM reports {where_data}
+        GROUP BY data_rating ORDER BY data_rating
+    """, params)
+    data_dist = {str(r[0]): r[1] for r in cur.fetchall()}
+
+    # Distribución tipo de problema (solo con problemas)
+    where_prob_type = where_problem + " AND problem_type IS NOT NULL"
+    cur.execute(f"""
+        SELECT problem_type, COUNT(*) as count FROM reports {where_prob_type}
         GROUP BY problem_type ORDER BY count DESC
     """, params)
-    by_problem = [{"problem_type": r[0], "count": r[1]} for r in cur.fetchall()]
+    by_problem = [{"label": r[0], "count": r[1]} for r in cur.fetchall()]
+
+    # Distribución frecuencia (solo con problemas)
+    where_freq = where_problem + " AND frequency IS NOT NULL"
+    cur.execute(f"""
+        SELECT frequency, COUNT(*) as count FROM reports {where_freq}
+        GROUP BY frequency ORDER BY count DESC
+    """, params)
+    by_frequency = [{"label": r[0], "count": r[1]} for r in cur.fetchall()]
+
     cur.close()
     conn.close()
-    return {"total": total, "by_method": by_method, "by_problem": by_problem}
+    return {
+        "total": total,
+        "with_problems": with_problems,
+        "avg_voice": avg_voice,
+        "avg_data": avg_data,
+        "voice_dist": voice_dist,
+        "data_dist": data_dist,
+        "by_problem": by_problem,
+        "by_frequency": by_frequency,
+    }
