@@ -31,22 +31,31 @@ def init_db():
         )
     """)
     # Migración segura para instancias ya existentes
-    for col, typedef in [("problem_type", "TEXT"), ("frequency", "TEXT")]:
+    for col, typedef in [
+        ("problem_type", "TEXT"),
+        ("frequency", "TEXT"),
+        ("voice_rating", "SMALLINT"),
+        ("data_rating", "SMALLINT"),
+        ("has_problem", "BOOLEAN"),
+    ]:
         cur.execute(f"ALTER TABLE reports ADD COLUMN IF NOT EXISTS {col} {typedef}")
     conn.commit()
     cur.close()
     conn.close()
 
 
-def save_report(phone: str, problem_type: str, frequency: str,
+def save_report(phone: str, voice_rating: int, data_rating: int,
+                has_problem: bool, problem_type: str, frequency: str,
                 address: str, lat: float, lng: float,
                 location_method: str, description: str):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO reports (phone, problem_type, frequency, address, lat, lng, location_method, description)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (phone, problem_type, frequency, address, lat, lng, location_method, description))
+        INSERT INTO reports (phone, voice_rating, data_rating, has_problem,
+                             problem_type, frequency, address, lat, lng, location_method, description)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (phone, voice_rating, data_rating, has_problem,
+          problem_type, frequency, address, lat, lng, location_method, description))
     conn.commit()
     cur.close()
     conn.close()
@@ -70,7 +79,8 @@ def get_all_reports(date_from: str = None, date_to: str = None):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(f"""
-        SELECT id, phone, problem_type, frequency, address, lat, lng,
+        SELECT id, phone, voice_rating, data_rating, has_problem,
+               problem_type, frequency, address, lat, lng,
                location_method, description,
                to_char(created_at AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at
         FROM reports {where}

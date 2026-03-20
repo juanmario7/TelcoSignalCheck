@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reporte de señal</title>
+  <title>Encuesta de señal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -25,23 +25,33 @@
     }
     .logo { font-size: 13px; color: #e4002b; font-weight: 700; margin-bottom: 8px; letter-spacing: .5px; }
     h1 { font-size: 20px; color: #1a1a2e; margin-bottom: 6px; }
-    p.sub { font-size: 14px; color: #555; margin-bottom: 24px; }
+    p.sub { font-size: 14px; color: #555; margin-bottom: 20px; }
 
-    /* Paso */
     .step { display: none; }
     .step.active { display: block; }
 
-    /* Indicador de progreso */
-    .progress {
-      display: flex; gap: 6px; margin-bottom: 24px;
-    }
-    .progress-dot {
-      height: 4px; flex: 1; border-radius: 4px; background: #e0e0e0;
-      transition: background .3s;
-    }
+    /* Barra de progreso */
+    .progress { display: flex; gap: 6px; margin-bottom: 24px; }
+    .progress-dot { height: 4px; flex: 1; border-radius: 4px; background: #e0e0e0; transition: background .3s; }
     .progress-dot.done { background: #e4002b; }
 
-    /* Opciones de selección */
+    /* Calificación 1-10 */
+    .rating-group { margin-bottom: 20px; }
+    .rating-label { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 10px; }
+    .rating-scale {
+      display: flex; gap: 6px; flex-wrap: nowrap;
+    }
+    .rating-btn {
+      flex: 1; padding: 10px 0; border-radius: 8px;
+      border: 2px solid #e0e0e0; background: #fff;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all .15s; color: #555; text-align: center;
+    }
+    .rating-btn:hover { border-color: #e4002b; background: #fde8ec; color: #e4002b; }
+    .rating-btn.selected { border-color: #e4002b; background: #e4002b; color: #fff; }
+    .scale-ends { display: flex; justify-content: space-between; font-size: 11px; color: #999; margin-top: 4px; }
+
+    /* Opciones */
     .options { display: flex; flex-direction: column; gap: 10px; }
     .option-btn {
       width: 100%; padding: 13px 16px; border-radius: 12px;
@@ -56,8 +66,7 @@
     .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
     .tab {
       flex: 1; padding: 10px; border-radius: 10px; border: 2px solid #e0e0e0;
-      background: #fff; font-size: 14px; cursor: pointer; text-align: center;
-      transition: all .2s;
+      background: #fff; font-size: 14px; cursor: pointer; text-align: center; transition: all .2s;
     }
     .tab.active { border-color: #e4002b; background: #fde8ec; color: #e4002b; font-weight: 600; }
 
@@ -67,12 +76,10 @@
     label { display: block; font-size: 13px; color: #444; margin-bottom: 6px; font-weight: 500; }
     input[type="text"], textarea {
       width: 100%; padding: 11px 14px; border: 1.5px solid #ddd;
-      border-radius: 10px; font-size: 15px; outline: none;
-      transition: border-color .2s;
+      border-radius: 10px; font-size: 15px; outline: none; transition: border-color .2s;
     }
     input[type="text"]:focus, textarea:focus { border-color: #e4002b; }
 
-    /* Estilos para el dropdown de autocomplete de Google */
     .pac-container { border-radius: 10px; margin-top: 4px; font-family: inherit; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
     .pac-item { padding: 8px 14px; font-size: 14px; cursor: pointer; }
     .pac-item:hover { background: #fde8ec; }
@@ -90,19 +97,15 @@
     .btn-row { display: flex; gap: 10px; margin-top: 22px; }
     .back-btn {
       padding: 13px 18px; border-radius: 12px; border: 1.5px solid #ddd;
-      background: #fff; font-size: 15px; cursor: pointer; color: #555;
-      transition: background .2s;
+      background: #fff; font-size: 15px; cursor: pointer; color: #555; transition: background .2s;
     }
     .back-btn:hover { background: #f5f5f5; }
     .submit-btn {
-      flex: 1; padding: 13px;
-      background: #e4002b; color: #fff; border: none; border-radius: 12px;
-      font-size: 16px; font-weight: 600; cursor: pointer;
-      transition: background .2s;
+      flex: 1; padding: 13px; background: #e4002b; color: #fff; border: none;
+      border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background .2s;
     }
     .submit-btn:hover { background: #b8001f; }
     .submit-btn:disabled { background: #f08090; cursor: not-allowed; }
-    .submit-btn-full { width: 100%; margin-top: 22px; }
 
     .error-msg { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
 
@@ -110,37 +113,58 @@
     .success .icon { font-size: 48px; }
     .success h2 { margin: 12px 0 6px; color: #1a1a2e; }
     .success p { color: #555; font-size: 14px; }
-
-    .no-problem { display: none; text-align: center; padding: 20px 0; }
-    .no-problem .icon { font-size: 48px; }
-    .no-problem h2 { margin: 12px 0 6px; color: #1a1a2e; }
-    .no-problem p { color: #555; font-size: 14px; }
   </style>
 </head>
 <body>
 <div class="card">
   <div class="logo">Virgin Mobile</div>
 
-  <!-- Progreso -->
   <div class="progress" id="progress">
     <div class="progress-dot done" id="dot-1"></div>
     <div class="progress-dot" id="dot-2"></div>
     <div class="progress-dot" id="dot-3"></div>
     <div class="progress-dot" id="dot-4"></div>
+    <div class="progress-dot" id="dot-5"></div>
   </div>
 
-  <!-- Paso 1: ¿Has tenido problemas? -->
+  <!-- Paso 1: Calificación voz y datos -->
   <div class="step active" id="step-1">
+    <h1>¿Cómo calificarías nuestro servicio?</h1>
+    <p class="sub">Del 1 (muy malo) al 10 (excelente).</p>
+
+    <div class="rating-group">
+      <div class="rating-label">📞 Servicio de voz</div>
+      <div class="rating-scale" id="rating-voice"></div>
+      <div class="scale-ends"><span>Muy malo</span><span>Excelente</span></div>
+    </div>
+
+    <div class="rating-group">
+      <div class="rating-label">📶 Servicio de datos</div>
+      <div class="rating-scale" id="rating-data"></div>
+      <div class="scale-ends"><span>Muy malo</span><span>Excelente</span></div>
+    </div>
+
+    <div class="error-msg" id="error-step1">Por favor califica ambos servicios.</div>
+    <div class="btn-row">
+      <button class="submit-btn" onclick="goTo(2)">Siguiente</button>
+    </div>
+  </div>
+
+  <!-- Paso 2: ¿Has tenido problemas? -->
+  <div class="step" id="step-2">
     <h1>¿Has tenido problemas de señal?</h1>
     <p class="sub">Tu opinión nos ayuda a mejorar la cobertura.</p>
     <div class="options">
       <button class="option-btn" onclick="answerProblem(true)">Sí, he tenido problemas</button>
       <button class="option-btn" onclick="answerProblem(false)">No, todo está bien</button>
     </div>
+    <div class="btn-row">
+      <button class="back-btn" onclick="goTo(1)">← Atrás</button>
+    </div>
   </div>
 
-  <!-- Paso 2: ¿Qué tipo de problema? -->
-  <div class="step" id="step-2">
+  <!-- Paso 3: ¿Qué tipo de problema? -->
+  <div class="step" id="step-3">
     <h1>¿Qué tipo de problema?</h1>
     <p class="sub">Selecciona la opción que más se ajuste.</p>
     <div class="options" id="problem-options">
@@ -159,14 +183,14 @@
       </div>
     </div>
     <div class="btn-row">
-      <button class="back-btn" onclick="goTo(1)">← Atrás</button>
-      <button class="submit-btn" onclick="goTo(3)" id="btn-step2">Siguiente</button>
+      <button class="back-btn" onclick="goTo(2)">← Atrás</button>
+      <button class="submit-btn" onclick="goTo(4)">Siguiente</button>
     </div>
-    <div class="error-msg" id="error-step2">Por favor selecciona una opción.</div>
+    <div class="error-msg" id="error-step3">Por favor selecciona una opción.</div>
   </div>
 
-  <!-- Paso 3: ¿Con qué frecuencia? -->
-  <div class="step" id="step-3">
+  <!-- Paso 4: ¿Con qué frecuencia? -->
+  <div class="step" id="step-4">
     <h1>¿Con qué frecuencia?</h1>
     <p class="sub">Cuéntanos con qué regularidad ocurre.</p>
     <div class="options" id="frequency-options">
@@ -176,16 +200,16 @@
       <button class="option-btn" onclick="selectOption('frequency', 'Solo en ciertos horarios', this)">🕐 Solo en ciertos horarios</button>
     </div>
     <div class="btn-row">
-      <button class="back-btn" onclick="goTo(2)">← Atrás</button>
-      <button class="submit-btn" onclick="goTo(4)" id="btn-step3">Siguiente</button>
+      <button class="back-btn" onclick="goTo(3)">← Atrás</button>
+      <button class="submit-btn" onclick="goTo(5)">Siguiente</button>
     </div>
-    <div class="error-msg" id="error-step3">Por favor selecciona una opción.</div>
+    <div class="error-msg" id="error-step4">Por favor selecciona una opción.</div>
   </div>
 
-  <!-- Paso 4: Ubicación + comentario -->
-  <div class="step" id="step-4">
-    <h1>¿Dónde ocurre el problema?</h1>
-    <p class="sub">Indícanos tu ubicación para revisarla.</p>
+  <!-- Paso 5: Ubicación -->
+  <div class="step" id="step-5">
+    <h1 id="location-title">¿Dónde ocurre el problema?</h1>
+    <p class="sub">Indícanos tu ubicación.</p>
 
     <div class="tabs">
       <button class="tab active" onclick="switchTab('address')">📍 Dirección</button>
@@ -206,25 +230,18 @@
 
     <textarea id="description" style="margin-top:16px" placeholder="¿Algo más que quieras contarnos? (opcional)"></textarea>
 
-    <div class="error-msg" id="error-step4"></div>
+    <div class="error-msg" id="error-step5"></div>
 
     <div class="btn-row">
-      <button class="back-btn" onclick="goTo(3)">← Atrás</button>
+      <button class="back-btn" id="back-step5" onclick="backFromLocation()">← Atrás</button>
       <button class="submit-btn" id="submit-btn" onclick="submitReport()">Enviar reporte</button>
     </div>
-  </div>
-
-  <!-- Sin problemas -->
-  <div class="no-problem" id="no-problem">
-    <div class="icon">👍</div>
-    <h2>¡Nos alegra saberlo!</h2>
-    <p>Gracias por tomarte el tiempo de respondernos.</p>
   </div>
 
   <!-- Éxito -->
   <div class="success" id="success">
     <div class="icon">✅</div>
-    <h2>¡Gracias por reportar!</h2>
+    <h2>¡Gracias por tu respuesta!</h2>
     <p>Recibimos tu reporte. Nuestro equipo técnico revisará la zona.</p>
   </div>
 </div>
@@ -235,63 +252,104 @@
   let currentTab = "address";
   let gpsCoords = null;
   let autocompleteCoords = null;
-  let answers = { problem: null, frequency: null };
+  let hasProblem = null;
+  let answers = { voice: null, data: null, problem: null, frequency: null };
   let currentStep = 1;
+  const TOTAL_STEPS = 5;
+
+  // ── Rating 1-10 ───────────────────────────────────────────────────────────
+
+  function buildRatingScale(containerId, type) {
+    const container = document.getElementById(containerId);
+    for (let i = 1; i <= 10; i++) {
+      const btn = document.createElement("button");
+      btn.className = "rating-btn";
+      btn.textContent = i;
+      btn.onclick = () => selectRating(type, i, containerId);
+      container.appendChild(btn);
+    }
+  }
+
+  function selectRating(type, value, containerId) {
+    document.querySelectorAll("#" + containerId + " .rating-btn").forEach(b => b.classList.remove("selected"));
+    document.querySelectorAll("#" + containerId + " .rating-btn")[value - 1].classList.add("selected");
+    answers[type] = value;
+    document.getElementById("error-step1").style.display = "none";
+  }
+
+  buildRatingScale("rating-voice", "voice");
+  buildRatingScale("rating-data", "data");
 
   // ── Progreso ──────────────────────────────────────────────────────────────
 
   function updateProgress(step) {
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
       document.getElementById("dot-" + i).classList.toggle("done", i <= step);
     }
   }
 
-  function goTo(step) {
-    // Validar antes de avanzar
-    if (step === 3 && currentStep === 2) {
-      if (!answers.problem) {
-        document.getElementById("error-step2").style.display = "block"; return;
-      }
-      if (answers.problem === "Otro") {
-        const otroText = document.getElementById("otro-input").value.trim();
-        if (!otroText) {
-          document.getElementById("error-step2").textContent = "Por favor describe el problema.";
-          document.getElementById("error-step2").style.display = "block"; return;
-        }
-        answers.problem = "Otro: " + otroText;
-      }
-    }
-    if (step === 4 && currentStep === 3 && !answers.frequency) {
-      document.getElementById("error-step3").style.display = "block"; return;
-    }
+  function showStep(step) {
     document.getElementById("step-" + currentStep).classList.remove("active");
     currentStep = step;
     document.getElementById("step-" + currentStep).classList.add("active");
     updateProgress(step);
   }
 
-  // ── Paso 1 ────────────────────────────────────────────────────────────────
+  // ── Navegación ────────────────────────────────────────────────────────────
 
-  function answerProblem(hasProblem) {
-    document.getElementById("step-1").classList.remove("active");
-    if (!hasProblem) {
-      document.getElementById("progress").style.display = "none";
-      document.getElementById("no-problem").style.display = "block";
+  function goTo(step) {
+    if (step === 2 && currentStep === 1) {
+      if (answers.voice === null || answers.data === null) {
+        document.getElementById("error-step1").style.display = "block"; return;
+      }
+    }
+    if (step === 4 && currentStep === 3) {
+      if (!answers.problem) {
+        document.getElementById("error-step3").style.display = "block"; return;
+      }
+      if (answers.problem === "Otro") {
+        const txt = document.getElementById("otro-input").value.trim();
+        if (!txt) {
+          document.getElementById("error-step3").textContent = "Por favor describe el problema.";
+          document.getElementById("error-step3").style.display = "block"; return;
+        }
+        answers.problem = "Otro: " + txt;
+      }
+    }
+    if (step === 5 && currentStep === 4) {
+      if (!answers.frequency) {
+        document.getElementById("error-step4").style.display = "block"; return;
+      }
+    }
+    showStep(step);
+  }
+
+  function answerProblem(value) {
+    hasProblem = value;
+    if (value) {
+      // Con problemas: paso 3
+      document.getElementById("location-title").textContent = "¿Dónde ocurre el problema?";
+      showStep(3);
     } else {
-      currentStep = 2;
-      document.getElementById("step-2").classList.add("active");
-      updateProgress(2);
+      // Sin problemas: saltar directo a ubicación
+      document.getElementById("location-title").textContent = "¿Dónde estás ubicado?";
+      showStep(5);
     }
   }
 
-  // ── Selección de opciones ────────────────────────────────────────────────
+  function backFromLocation() {
+    // Si no tenía problemas, vuelve al paso 2; si tenía, vuelve al paso 4
+    goTo(hasProblem ? 4 : 2);
+  }
+
+  // ── Selección de opciones ─────────────────────────────────────────────────
 
   function selectOption(type, value, el) {
     const containerId = type === "problem" ? "problem-options" : "frequency-options";
     document.querySelectorAll("#" + containerId + " .option-btn").forEach(b => b.classList.remove("selected"));
     el.classList.add("selected");
     answers[type] = value;
-    document.getElementById("error-step" + (type === "problem" ? 2 : 3)).style.display = "none";
+    document.getElementById("error-step" + (type === "problem" ? 3 : 4)).style.display = "none";
     if (type === "problem") {
       document.getElementById("otro-container").style.display = value === "Otro" ? "block" : "none";
       if (value !== "Otro") document.getElementById("otro-input").value = "";
@@ -299,11 +357,10 @@
   }
 
   function updateOtroCounter() {
-    const val = document.getElementById("otro-input").value;
-    document.getElementById("otro-counter").textContent = val.length;
+    document.getElementById("otro-counter").textContent = document.getElementById("otro-input").value.length;
   }
 
-  // ── Paso 4: Ubicación ─────────────────────────────────────────────────────
+  // ── Ubicación ─────────────────────────────────────────────────────────────
 
   window.initAutocomplete = function() {
     const input = document.getElementById("address-input");
@@ -317,9 +374,7 @@
       if (place.geometry && place.geometry.location) {
         autocompleteCoords = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
         input.value = place.formatted_address;
-      } else {
-        autocompleteCoords = null;
-      }
+      } else { autocompleteCoords = null; }
     });
     input.addEventListener("input", () => { autocompleteCoords = null; });
   };
@@ -350,13 +405,16 @@
 
   async function submitReport() {
     const btn = document.getElementById("submit-btn");
-    const errorEl = document.getElementById("error-step4");
+    const errorEl = document.getElementById("error-step5");
     errorEl.style.display = "none";
 
     let payload = {
       phone: PHONE,
-      problem_type: answers.problem,
-      frequency: answers.frequency,
+      voice_rating: answers.voice,
+      data_rating: answers.data,
+      has_problem: hasProblem,
+      problem_type: answers.problem || null,
+      frequency: answers.frequency || null,
       location_method: currentTab,
       description: document.getElementById("description").value.trim() || null,
     };
@@ -384,7 +442,7 @@
       const data = await resp.json();
       if (!resp.ok) { showError(data.detail || "Error al enviar."); btn.disabled = false; btn.textContent = "Enviar reporte"; return; }
       document.getElementById("progress").style.display = "none";
-      document.getElementById("step-4").classList.remove("active");
+      document.getElementById("step-5").classList.remove("active");
       document.getElementById("success").style.display = "block";
     } catch (e) {
       showError("Error de conexión. Intenta de nuevo.");
@@ -394,7 +452,7 @@
   }
 
   function showError(msg) {
-    const el = document.getElementById("error-step4");
+    const el = document.getElementById("error-step5");
     el.textContent = msg;
     el.style.display = "block";
   }

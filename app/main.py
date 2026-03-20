@@ -34,9 +34,12 @@ def form(phone: str = Query(..., description="Número del usuario")):
 
 class ReportPayload(BaseModel):
     phone: str
-    problem_type: str
-    frequency: str
-    location_method: str          # "gps" | "address"
+    voice_rating: int
+    data_rating: int
+    has_problem: bool
+    problem_type: str | None = None
+    frequency: str | None = None
+    location_method: str = "address"   # "gps" | "address"
     address: str | None = None
     lat: float | None = None
     lng: float | None = None
@@ -65,6 +68,9 @@ def submit_report(payload: ReportPayload):
 
     save_report(
         phone=payload.phone,
+        voice_rating=payload.voice_rating,
+        data_rating=payload.data_rating,
+        has_problem=payload.has_problem,
         problem_type=payload.problem_type,
         frequency=payload.frequency,
         address=address,
@@ -104,7 +110,7 @@ def stats(date_from: str = Query(None), date_to: str = Query(None)):
 def export_reports(date_from: str = Query(None), date_to: str = Query(None)):
     rows = get_all_reports(date_from, date_to)
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=["id", "phone", "problem_type", "frequency", "address", "lat", "lng", "location_method", "description", "created_at"])
+    writer = csv.DictWriter(output, fieldnames=["id", "phone", "voice_rating", "data_rating", "has_problem", "problem_type", "frequency", "address", "lat", "lng", "location_method", "description", "created_at"])
     writer.writeheader()
     writer.writerows(rows)
     output.seek(0)
