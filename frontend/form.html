@@ -246,6 +246,25 @@
   </div>
 </div>
 
+<script>
+  // Debe estar definida ANTES de que cargue el script de Google Maps
+  function initAutocomplete() {
+    const input = document.getElementById("address-input");
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: "co" },
+      fields: ["formatted_address", "geometry"],
+      types: ["geocode", "establishment"],
+    });
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (place.geometry && place.geometry.location) {
+        autocompleteCoords = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+        input.value = place.formatted_address;
+      } else { autocompleteCoords = null; }
+    });
+    input.addEventListener("input", () => { autocompleteCoords = null; });
+  }
+</script>
 <script src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_MAPS_API_KEY}}&libraries=places&language=es&region=CO&callback=initAutocomplete" async defer></script>
 <script>
   const PHONE = "{{PHONE}}";
@@ -362,22 +381,6 @@
 
   // ── Ubicación ─────────────────────────────────────────────────────────────
 
-  window.initAutocomplete = function() {
-    const input = document.getElementById("address-input");
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      componentRestrictions: { country: "co" },
-      fields: ["formatted_address", "geometry"],
-      types: ["geocode", "establishment"],
-    });
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (place.geometry && place.geometry.location) {
-        autocompleteCoords = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
-        input.value = place.formatted_address;
-      } else { autocompleteCoords = null; }
-    });
-    input.addEventListener("input", () => { autocompleteCoords = null; });
-  };
 
   function switchTab(tab) {
     currentTab = tab;
