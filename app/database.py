@@ -20,6 +20,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS reports (
             id              SERIAL PRIMARY KEY,
             phone           TEXT NOT NULL,
+            problem_type    TEXT,
+            frequency       TEXT,
             address         TEXT,
             lat             DOUBLE PRECISION,
             lng             DOUBLE PRECISION,
@@ -28,19 +30,23 @@ def init_db():
             created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
     """)
+    # Migración segura para instancias ya existentes
+    for col, typedef in [("problem_type", "TEXT"), ("frequency", "TEXT")]:
+        cur.execute(f"ALTER TABLE reports ADD COLUMN IF NOT EXISTS {col} {typedef}")
     conn.commit()
     cur.close()
     conn.close()
 
 
-def save_report(phone: str, address: str, lat: float, lng: float,
+def save_report(phone: str, problem_type: str, frequency: str,
+                address: str, lat: float, lng: float,
                 location_method: str, description: str):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO reports (phone, address, lat, lng, location_method, description)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (phone, address, lat, lng, location_method, description))
+        INSERT INTO reports (phone, problem_type, frequency, address, lat, lng, location_method, description)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (phone, problem_type, frequency, address, lat, lng, location_method, description))
     conn.commit()
     cur.close()
     conn.close()
@@ -64,7 +70,8 @@ def get_all_reports(date_from: str = None, date_to: str = None):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(f"""
-        SELECT id, phone, address, lat, lng, location_method, description,
+        SELECT id, phone, problem_type, frequency, address, lat, lng,
+               location_method, description,
                to_char(created_at AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at
         FROM reports {where}
         ORDER BY created_at DESC
@@ -87,6 +94,12 @@ def get_stats(date_from: str = None, date_to: str = None):
         GROUP BY location_method
     """, params)
     by_method = [{"location_method": r[0], "count": r[1]} for r in cur.fetchall()]
+    cur.execute(f"""
+        SELECT problem_type, COUNT(*) as count
+        FROM reports {where}
+        GROUP BY problem_type ORDER BY count DESC
+    """, params)
+    by_problem = [{"problem_type": r[0], "count": r[1]} for r in cur.fetchall()]
     cur.close()
     conn.close()
-    return {"total": total, "by_method": by_method}
+    return {"total": total, "by_method": by_method, "by_problem": by_problem}

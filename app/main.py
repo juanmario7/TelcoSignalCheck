@@ -34,6 +34,8 @@ def form(phone: str = Query(..., description="Número del usuario")):
 
 class ReportPayload(BaseModel):
     phone: str
+    problem_type: str
+    frequency: str
     location_method: str          # "gps" | "address"
     address: str | None = None
     lat: float | None = None
@@ -48,7 +50,6 @@ def submit_report(payload: ReportPayload):
     if payload.location_method == "address":
         if not payload.address:
             raise HTTPException(400, "Se requiere dirección")
-        # Si el autocomplete ya envió coordenadas, las usamos directamente
         if lat is None or lng is None:
             result = geocode(payload.address)
             if not result:
@@ -64,6 +65,8 @@ def submit_report(payload: ReportPayload):
 
     save_report(
         phone=payload.phone,
+        problem_type=payload.problem_type,
+        frequency=payload.frequency,
         address=address,
         lat=lat,
         lng=lng,
@@ -71,6 +74,12 @@ def submit_report(payload: ReportPayload):
         description=payload.description,
     )
     return {"ok": True, "lat": lat, "lng": lng}
+
+
+@app.post("/api/no-problem")
+def no_problem(payload: dict):
+    """Registra usuarios que respondieron que no tienen problemas."""
+    return {"ok": True}
 
 
 # ── Dashboard API ─────────────────────────────────────────────────────────────
@@ -95,7 +104,7 @@ def stats(date_from: str = Query(None), date_to: str = Query(None)):
 def export_reports(date_from: str = Query(None), date_to: str = Query(None)):
     rows = get_all_reports(date_from, date_to)
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=["id", "phone", "address", "lat", "lng", "location_method", "description", "created_at"])
+    writer = csv.DictWriter(output, fieldnames=["id", "phone", "problem_type", "frequency", "address", "lat", "lng", "location_method", "description", "created_at"])
     writer.writeheader()
     writer.writerows(rows)
     output.seek(0)
